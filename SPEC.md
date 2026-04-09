@@ -89,10 +89,10 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 ```xml
 <page uid="KjR9_d8HM" title="Project Alpha">
 
-<block uid="abc123">First block with <page-ref title="Project Beta"/> link</block>
+<block uid="abc123">First block with <page-ref title="Project Beta"/> link and a <page-ref title="research" syntax="hashtag"/></block>
 
 <block uid="def456">Second block with **formatting** and `code`
-  <block uid="ghi789">Nested child block</block>
+  <block uid="ghi789">Nested child block with <attr name="status">active</attr></block>
   <block uid="jkl012">References <block-ref uid="mno345"/> from another page</block>
 </block>
 
@@ -102,6 +102,13 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 
 <block uid="vwx234"><done/> Ship the prototype</block>
 
+<block uid="lmn567"><query>[:find ?title :where [?p :node/title ?title] [?p :block/refs ?r] [?r :node/title "Project Alpha"]]</query></block>
+
+<block uid="opq890" view="table">Table header row
+  <block uid="rst111">Row 1 data</block>
+  <block uid="uvw222">Row 2 data</block>
+</block>
+
 </page>
 ```
 
@@ -110,12 +117,18 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 | Roam construct | XML representation | Attributes |
 |---|---|---|
 | Page | `<page>...</page>` | `uid`, `title` |
-| Block | `<block>...</block>` | `uid` |
+| Block | `<block>...</block>` | `uid`, optional `view` (`table`, `kanban`) |
 | Page reference `[[Page]]` | `<page-ref title="Page"/>` | `title` |
+| Hashtag `#tag` | `<page-ref title="tag" syntax="hashtag"/>` | `title`, `syntax` |
+| Hashtag `#[[multi word]]` | `<page-ref title="multi word" syntax="hashtag"/>` | `title`, `syntax` |
 | Block reference `((uid))` | `<block-ref uid="uid"/>` | `uid` |
 | Block embed `{{[[embed]]: ((uid))}}` | `<embed uid="uid"/>` | `uid` |
 | TODO `{{[[TODO]]}}` | `<todo/>` | — |
 | DONE `{{[[DONE]]}}` | `<done/>` | — |
+| Attribute `key:: value` | `<attr name="key">value</attr>` | `name` |
+| Query `{{[[query]]: ...}}` | `<query>[:find ...]</query>` | — |
+
+Hashtags and wikilinks both normalize to `<page-ref>`. The `syntax` attribute (present only for hashtags) preserves the original form for round-tripping back to Roam. When `syntax` is absent, the reference was a `[[wikilink]]`. This means `grep '<page-ref title="foo"'` finds all references to page "foo" regardless of original syntax.
 
 ### What stays as markdown
 
@@ -130,7 +143,6 @@ All inline formatting remains as-is within block text content:
 - LaTeX: `$$formula$$`
 - Images: `![alt](url)`
 - External links: `[text](url)`
-- Hashtags: `#tag` (these are page references in Roam but kept as shorthand since they're unambiguous)
 
 Rationale: these are all inline decorations that every LLM and text tool handles fine. XML-ifying them would add noise without improving parseability.
 
@@ -177,15 +189,40 @@ An agent can create a new page by creating a new `.roam` file:
 
 The `uid` attribute on `<page>` is omitted. The sync daemon creates the page in Roam and rewrites the file with the assigned UID.
 
-### Special characters in block content
+### Parsing model: lenient, not strict XML
 
-Block text content is XML text, so:
-- `<` → `&lt;` (unless it's a recognized tag like `<page-ref>`)
-- `>` → `&gt;`
-- `&` → `&amp;`
-- `"` inside attributes → `&quot;`
+**These files are NOT valid XML.** They use XML-like tags for structure, but block content is unescaped natural text. This is a deliberate design choice.
 
-The sync daemon handles escaping/unescaping transparently. Agents writing raw content should use standard XML escaping, or the daemon can accept unescaped content and fix it on next sync cycle (best-effort tolerance).
+The problem: markdown content routinely contains `<`, `>`, and `&` (code examples, comparisons, HTML). Requiring agents to escape these as `&lt;`, `&gt;`, `&amp;` defeats the purpose of making files easy to read and write.
+
+The solution: the parser knows the **finite tag vocabulary** — `page`, `block`, `page-ref`, `block-ref`, `embed`, `todo`, `done`, `attr`, `query` — and treats any `<` that doesn't match a known tag as literal text. This is analogous to how HTML parsers work: lenient by default, strict only at the boundaries that matter.
+
+Example of valid content that is NOT valid XML:
+
+```xml
+<block uid="abc123">Check if a < b && c > d, see <page-ref title="Results"/></block>
+```
+
+The parser sees:
+- `<block uid="abc123">` — known tag, start of block
+- `Check if a < b && c > d, see ` — literal text (the `<` and `&&` don't start known tags)
+- `<page-ref title="Results"/>` — known tag, inline reference
+- `</block>` — known tag, end of block
+
+Agents can write natural text without escaping. The tradeoff is that standard XML parsers (`ElementTree`, `quick-xml`) cannot parse these files directly — the daemon uses a custom parser.
+
+### Special characters in attributes
+
+Attribute values (`uid="..."`, `title="..."`) DO require escaping for `"` since it terminates the attribute. Use `&quot;` or single-quote the attribute. Page titles containing `"` are rare in practice.
+
+### Agent authoring guidelines
+
+When an agent creates or edits a `.roam` file:
+- Write block content as natural text — no XML escaping needed
+- Use the known tags for structure and references
+- Do not invent new tags — the parser will treat them as literal text
+- Preserve existing `uid` attributes — they are identity anchors
+- Omit `uid` on new blocks/pages — the daemon assigns them
 
 ---
 
@@ -214,6 +251,10 @@ loop {
     sleep(poll_interval)
 }
 ```
+
+### Atomic file writes
+
+The daemon writes updated files atomically: write to a temporary file in the same directory, then `rename()` to the target path. This prevents agents from reading a partially-written file. The file watcher ignores writes initiated by the daemon itself (tracked via a write-lock flag) to avoid echo loops.
 
 ### Remote change detection (Roam → local)
 
@@ -490,18 +531,66 @@ docker run --rm roam-filesystem-test
 
 ---
 
-## Open Questions
+## Agent Usage Patterns
 
-1. **Hashtag page refs**: `#tag` is shorthand for `[[tag]]` in Roam. Should it map to `<page-ref title="tag"/>` or stay as `#tag`? Current decision: keep as `#tag` for readability.
+Common operations an agent would perform against the filesystem:
 
-2. **Attributes**: Roam attributes (`key:: value`) are block-level metadata. Should they get their own XML tag (`<attr key="key">value</attr>`) or stay as text content? Leaning toward XML tag for parseability.
+```bash
+# List all pages
+ls pages/
 
-3. **Queries**: Roam query blocks (`{{[[query]]: ...}}`) contain Datalog. Should these be a tag (`<query>...</query>`) or text? Leaning toward tag.
+# Read a page
+cat pages/meeting-notes.roam
 
-4. **Tables**: Roam has a table construct. Needs investigation on how to represent.
+# Find all references to a page
+grep '<page-ref title="Project Alpha"' pages/*.roam
 
-5. **Kanban boards**: Roam kanban views are structural. May not need filesystem representation.
+# Find all open TODOs
+grep '<todo/>' pages/*.roam
 
-6. **Version history**: Roam tracks block-level version history. Out of scope for v1.
+# Find which page defines a block UID
+grep 'uid="mno345"' pages/*.roam
 
-7. **Permissions**: Multi-user graphs have page-level permissions. Out of scope for v1.
+# Find all pages with a specific attribute value
+grep '<attr name="status">active</attr>' pages/*.roam
+
+# Create a new page
+cat > pages/new-idea.roam << 'EOF'
+<page title="New Idea">
+
+<block>This is a new page created by an agent</block>
+
+<block><page-ref title="Project Alpha"/> inspired this idea</block>
+
+</page>
+EOF
+
+# Add a block to an existing page (append before </page>)
+sed -i '' '/<\/page>/i\
+<block>New block appended by agent</block>
+' pages/meeting-notes.roam
+
+# Find all pages modified recently (by filesystem mtime)
+find pages/ -name "*.roam" -mmin -30
+
+# Full-text search across all pages
+grep -r "specific phrase" pages/
+```
+
+---
+
+## Resolved Design Decisions
+
+1. **Hashtags**: `#tag` → `<page-ref title="tag" syntax="hashtag"/>`. Normalizes all page references to one tag. The `syntax` attribute preserves original form for round-tripping.
+
+2. **Attributes**: `key:: value` → `<attr name="key">value</attr>`. Enables structured queries via grep.
+
+3. **Queries**: `{{[[query]]: ...}}` → `<query>...</query>`. Datalog content is opaque but bounded by tags.
+
+4. **Tables**: Parent block gets `view="table"` attribute. Child blocks are rows. No special table syntax.
+
+5. **Kanban**: Parent block gets `view="kanban"` attribute. Child blocks are columns, grandchildren are cards.
+
+6. **Version history**: Out of scope for v1. Roam's block-level history is not exposed via API anyway.
+
+7. **Permissions**: Out of scope for v1. Single-user graphs only.
