@@ -127,10 +127,10 @@ All `{{[[video]]:`, `{{video:`, and `{{youtube:` variants normalize to `<video>`
 
 | Roam syntax | XML representation |
 |---|---|
-| `{{[[embed]]: ((uid))}}` | `<embed uid="uid"/>` (existing) |
-| `{{[[embed]]: [[Page]]}}` | `<embed page="Page Title"/>` (new) |
+| `{{embed: ((uid))}}` / `{{[[embed]]: ((uid))}}` | `<embed uid="uid"/>` (existing) |
+| `{{embed: [[Page]]}}` / `{{[[embed]]: [[Page]]}}` | `<embed page="Page Title"/>` (new) |
 
-Page embeds use a `page` attribute instead of `uid`.
+Both bracket and non-bracket embed forms exist in the wild. The parser handles both. Page embeds use a `page` attribute instead of `uid`.
 
 ### E. Inline embed content (new feature)
 
@@ -326,6 +326,7 @@ Expands from 9 tags to 17 tags:
 - `<roam-css/>` -> `{{[[roam/css]]}}`
 - `<attr-table page="X"/>` -> `{{attr-table: [[X]]}}`
 - `<backlinks>...</backlinks>` -> stripped entirely (read-only, not in Roam data)
+- `<page uid="X" title="Y">...</page>` -> top-level JSON object with `title` and `uid` fields; maps to one `.roam` file
 
 ### C. Reference integrity checks
 

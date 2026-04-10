@@ -91,7 +91,7 @@
         "order": 6
       },
       {
-        "string": "[:find ?title :where [?p :node/title ?title] [?p :block/refs ?r] [?r :node/title \"Project Alpha\"]]",
+        "string": "{{[[query]]: [:find ?title :where [?p :node/title ?title] [?p :block/refs ?r] [?r :node/title \"Project Alpha\"]]}}",
         "uid": "abc123013",
         "order": 7
       },
@@ -153,6 +153,7 @@
         "string": "Beta overview with [[Project Alpha]] reference",
         "uid": "beta001",
         "order": 0,
+        "heading": 1,
         "refs": [{ "uid": "KjR9_d8HM" }],
         ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
       },
@@ -267,6 +268,18 @@
         "string": "---",
         "uid": "mtn009blk",
         "order": 6
+      },
+      {
+        "string": "{{[[embed]]: [[Design Principles]]}}",
+        "uid": "mtn010blk",
+        "order": 7,
+        "refs": [{ "uid": "DesignPgUd" }],
+        ":block/refs": [{ ":block/uid": "DesignPgUd" }]
+      },
+      {
+        "string": "{{youtube: https://www.youtube.com/watch?v=abc123test}}",
+        "uid": "mtn011blk",
+        "order": 8
       }
     ]
   },
@@ -524,7 +537,8 @@
       {
         "string": "Research page (referenced as #research hashtag)",
         "uid": "res0000001",
-        "order": 0
+        "order": 0,
+        "heading": 3
       }
     ]
   },

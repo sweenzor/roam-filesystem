@@ -137,8 +137,8 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 | Hashtag `#[[multi word]]` | `<page-ref title="multi word" syntax="hashtag"/>` | `title`, `syntax` |
 | Block reference `((uid))` | `<block-ref uid="uid"/>` | `uid` |
 | Aliased block ref `[text](((uid)))` | `<block-ref uid="uid">text</block-ref>` | `uid` |
-| Block embed `{{[[embed]]: ((uid))}}` | `<embed uid="uid">...</embed>` | `uid` |
-| Page embed `{{[[embed]]: [[Page]]}}` | `<embed page="Page">...</embed>` | `page` |
+| Block embed `{{embed: ((uid))}}` / `{{[[embed]]: ((uid))}}` | `<embed uid="uid">...</embed>` | `uid` |
+| Page embed `{{embed: [[Page]]}}` / `{{[[embed]]: [[Page]]}}` | `<embed page="Page">...</embed>` | `page` |
 | TODO `{{[[TODO]]}}` | `<todo/>` | — |
 | DONE `{{[[DONE]]}}` | `<done/>` | — |
 | Attribute `key:: value` | `<attr name="key">value</attr>` | `name` |
@@ -147,7 +147,7 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 | PDF `{{pdf: URL}}` | `<pdf src="URL"/>` | `src` |
 | iframe `{{iframe: URL}}` | `<iframe src="URL"/>` | `src` |
 | Render component `{{roam/render: ((uid))}}` | `<roam-render uid="uid"/>` | `uid` |
-| CSS block `{{roam/css}}` | `<roam-css/>` | — |
+| CSS block `{{roam/css}}` / `{{[[roam/css]]}}` | `<roam-css/>` | — |
 | Attribute table `{{attr-table: [[Page]]}}` | `<attr-table page="Page"/>` | `page` |
 | Backlinks section | `<backlinks>...</backlinks>` | `count` |
 | Backlink entry | `<backlink>text</backlink>` | `page`, `page-uid`, `uid` |
@@ -709,7 +709,7 @@ grep '<backlink.*<todo/>' pages/Project/Alpha.roam
 
 7. **Media embeds**: `{{[[video]]: URL}}`, `{{pdf: URL}}`, `{{iframe: URL}}` → dedicated self-closing tags. All video variants (`{{video:`, `{{youtube:`, `{{[[video]]:`) normalize to `<video>`.
 
-8. **Inline embed content**: `<embed>` tags include the full block tree of the referenced content. Read-only on write-back. Max recursion depth 3 for nested embeds. Unresolvable embeds fall back to self-closing.
+8. **Inline embed content**: `<embed>` tags include the full block tree of the referenced content. Read-only on write-back. Max recursion depth 3 for nested embeds. Unresolvable embeds fall back to self-closing. Both `{{embed: ((uid))}}` and `{{[[embed]]: ((uid))}}` syntax variants are supported (same for page embeds).
 
 9. **Backlinks**: Each page includes a `<backlinks>` section with full block text of every referring block. Read-only, rebuilt each sync cycle. Sorted by page title.
 
