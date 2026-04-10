@@ -1,0 +1,544 @@
+[
+  {
+    "title": "Project Alpha",
+    "uid": "KjR9_d8HM",
+    "create-time": 1614229626805,
+    "edit-time": 1714769817480,
+    ":create/user": { ":user/uid": "testuser1" },
+    ":edit/user": { ":user/uid": "testuser1" },
+    "children": [
+      {
+        "string": "First block with [[Project Beta]] link and a #research tag",
+        "uid": "abc123001",
+        "order": 0,
+        "create-time": 1614229626805,
+        "edit-time": 1614229626805,
+        "refs": [{ "uid": "BetaPageUid" }, { "uid": "ResearchPg" }],
+        ":block/refs": [{ ":block/uid": "BetaPageUid" }, { ":block/uid": "ResearchPg" }]
+      },
+      {
+        "string": "A heading block with **bold** and `code`",
+        "uid": "abc123002",
+        "order": 1,
+        "heading": 2,
+        "create-time": 1614229626805,
+        "edit-time": 1614229626805,
+        "children": [
+          {
+            "string": "Nested child with status:: [[Active]]",
+            "uid": "abc123003",
+            "order": 0,
+            "refs": [{ "uid": "ActivePage" }],
+            ":block/refs": [{ ":block/uid": "ActivePage" }]
+          },
+          {
+            "string": "References ((mno345ref)) from another page",
+            "uid": "abc123004",
+            "order": 1,
+            "refs": [{ "uid": "mno345ref" }],
+            ":block/refs": [{ ":block/uid": "mno345ref" }]
+          },
+          {
+            "string": "[the beta project]([[Project Beta]]) has details",
+            "uid": "abc123005",
+            "order": 2,
+            "refs": [{ "uid": "BetaPageUid" }],
+            ":block/refs": [{ ":block/uid": "BetaPageUid" }]
+          },
+          {
+            "string": "See [this block](((mno345ref))) for context",
+            "uid": "abc123006",
+            "order": 3,
+            "refs": [{ "uid": "mno345ref" }],
+            ":block/refs": [{ ":block/uid": "mno345ref" }]
+          }
+        ]
+      },
+      {
+        "string": "{{[[TODO]]}} Review the design doc",
+        "uid": "abc123007",
+        "order": 2,
+        "children": [
+          {
+            "string": "{{[[embed]]: ((xyz555emb))}}",
+            "uid": "abc123008",
+            "order": 0,
+            "refs": [{ "uid": "xyz555emb" }],
+            ":block/refs": [{ ":block/uid": "xyz555emb" }]
+          }
+        ]
+      },
+      {
+        "string": "{{[[DONE]]}} Ship the prototype",
+        "uid": "abc123009",
+        "order": 3
+      },
+      {
+        "string": "{{[[video]]: https://www.youtube.com/watch?v=dQw4w9WgXcQ}}",
+        "uid": "abc123010",
+        "order": 4,
+        "refs": [{ "uid": "videoPageId" }],
+        ":block/refs": [{ ":block/uid": "videoPageId" }]
+      },
+      {
+        "string": "{{iframe: https://example.com/embed}}",
+        "uid": "abc123011",
+        "order": 5
+      },
+      {
+        "string": "{{pdf: https://example.com/paper.pdf}}",
+        "uid": "abc123012",
+        "order": 6
+      },
+      {
+        "string": "[:find ?title :where [?p :node/title ?title] [?p :block/refs ?r] [?r :node/title \"Project Alpha\"]]",
+        "uid": "abc123013",
+        "order": 7
+      },
+      {
+        "string": "Table header row",
+        "uid": "abc123014",
+        "order": 8,
+        "children": [
+          {
+            "string": "Row 1 data",
+            "uid": "abc123015",
+            "order": 0
+          },
+          {
+            "string": "Row 2 data",
+            "uid": "abc123016",
+            "order": 1
+          }
+        ]
+      },
+      {
+        "string": "A centered block",
+        "uid": "abc123017",
+        "order": 9,
+        "text-align": "center"
+      },
+      {
+        "string": "![screenshot](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Ftest.png?alt=media&token=abc123)",
+        "uid": "abc123018",
+        "order": 10,
+        "props": {
+          "image-size": {
+            "https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Ftest.png?alt=media&token=abc123": {
+              "width": 580,
+              "height": null
+            }
+          }
+        },
+        ":block/props": {
+          ":image-size": {
+            "https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Ftest.png?alt=media&token=abc123": {
+              ":width": 580,
+              ":height": null
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "title": "Project Beta",
+    "uid": "BetaPageUid",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    ":create/user": { ":user/uid": "testuser1" },
+    ":edit/user": { ":user/uid": "testuser1" },
+    "children": [
+      {
+        "string": "Beta overview with [[Project Alpha]] reference",
+        "uid": "beta001",
+        "order": 0,
+        "refs": [{ "uid": "KjR9_d8HM" }],
+        ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
+      },
+      {
+        "string": "Beta detail block",
+        "uid": "beta002",
+        "order": 1
+      }
+    ]
+  },
+  {
+    "title": "Design Principles",
+    "uid": "DesignPgUd",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "Design principles:",
+        "uid": "xyz555emb",
+        "order": 0,
+        "children": [
+          {
+            "string": "Keep it simple",
+            "uid": "xyz555ch1",
+            "order": 0
+          },
+          {
+            "string": "Optimize for readability",
+            "uid": "xyz555ch2",
+            "order": 1
+          }
+        ]
+      },
+      {
+        "string": "{{roam/render: ((renderUID))}}",
+        "uid": "design003",
+        "order": 1,
+        "refs": [{ "uid": "renderUID" }],
+        ":block/refs": [{ ":block/uid": "renderUID" }],
+        "children": [
+          {
+            "string": "```jsx\nfunction main() {\n  return <button>Hello</button>\n}```",
+            "uid": "renderUID",
+            "order": 0
+          }
+        ]
+      },
+      {
+        "string": "{{[[roam/css]]}}",
+        "uid": "design004",
+        "order": 2,
+        "refs": [{ "uid": "cssPageRef" }],
+        ":block/refs": [{ ":block/uid": "cssPageRef" }],
+        "children": [
+          {
+            "string": "```css\n.rm-block { font-size: 14px; }\n.rm-title { color: #333; }```",
+            "uid": "design005",
+            "order": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Meeting Notes",
+    "uid": "mtn001uid",
+    "create-time": 1614229626805,
+    "edit-time": 1714769817480,
+    "children": [
+      {
+        "string": "Discussed [[Project Alpha]] timeline",
+        "uid": "mtn002blk",
+        "order": 0,
+        "refs": [{ "uid": "KjR9_d8HM" }],
+        ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
+      },
+      {
+        "string": "{{[[TODO]]}} Follow up on [[Project Alpha]] deliverables",
+        "uid": "mtn003blk",
+        "order": 1,
+        "refs": [{ "uid": "KjR9_d8HM" }],
+        ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
+      },
+      {
+        "string": "Check if a < b && c > d in the code",
+        "uid": "mtn004blk",
+        "order": 2
+      },
+      {
+        "string": "Code example with special chars:",
+        "uid": "mtn005blk",
+        "order": 3,
+        "children": [
+          {
+            "string": "```python\ndef compare(a, b):\n    return a < b and a & 0xFF > 0\n```",
+            "uid": "mtn006blk",
+            "order": 0
+          }
+        ]
+      },
+      {
+        "string": "Block with $$E = mc^2$$ LaTeX and ^^highlighted^^ text and ~~struck~~ text",
+        "uid": "mtn007blk",
+        "order": 4
+      },
+      {
+        "string": "> This is a blockquote",
+        "uid": "mtn008blk",
+        "order": 5
+      },
+      {
+        "string": "---",
+        "uid": "mtn009blk",
+        "order": 6
+      }
+    ]
+  },
+  {
+    "title": "April 8th, 2026",
+    "uid": "04-08-2026",
+    "create-time": 1743984000000,
+    "edit-time": 1743984000000,
+    ":log/id": 1743984000000,
+    ":create/user": { ":user/uid": "testuser1" },
+    ":edit/user": { ":user/uid": "testuser1" },
+    "children": [
+      {
+        "string": "Daily note entry referencing [[Project Alpha]]",
+        "uid": "daily00001",
+        "order": 0,
+        "refs": [{ "uid": "KjR9_d8HM" }],
+        ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
+      },
+      {
+        "string": "Attended [[Meeting Notes]] standup",
+        "uid": "daily00002",
+        "order": 1,
+        "refs": [{ "uid": "mtn001uid" }],
+        ":block/refs": [{ ":block/uid": "mtn001uid" }]
+      }
+    ]
+  },
+  {
+    "title": "Deep Nesting Test",
+    "uid": "DeepNestPg",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "Level 1",
+        "uid": "deep00001",
+        "order": 0,
+        "children": [
+          {
+            "string": "Level 2",
+            "uid": "deep00002",
+            "order": 0,
+            "children": [
+              {
+                "string": "Level 3",
+                "uid": "deep00003",
+                "order": 0,
+                "children": [
+                  {
+                    "string": "Level 4",
+                    "uid": "deep00004",
+                    "order": 0,
+                    "children": [
+                      {
+                        "string": "Level 5 - deepest",
+                        "uid": "deep00005",
+                        "order": 0
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Empty Page",
+    "uid": "EmptyPgUid",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805
+  },
+  {
+    "title": "Unicode Content \u2728",
+    "uid": "UnicodePgU",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "\u4f60\u597d\u4e16\u754c - Hello World in Chinese",
+        "uid": "unic000001",
+        "order": 0
+      },
+      {
+        "string": "Emoji test: \ud83d\ude80\ud83c\udf1f\ud83d\udca1\u2705\u274c",
+        "uid": "unic000002",
+        "order": 1
+      },
+      {
+        "string": "Math: \u03b1 + \u03b2 = \u03b3, \u2200x \u2208 \u211d",
+        "uid": "unic000003",
+        "order": 2
+      }
+    ]
+  },
+  {
+    "title": "Attribute Test",
+    "uid": "AttrTestPg",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "Status:: [[Active]]",
+        "uid": "attr000001",
+        "order": 0,
+        "refs": [{ "uid": "ActivePage" }],
+        ":block/refs": [{ ":block/uid": "ActivePage" }]
+      },
+      {
+        "string": "Priority:: High",
+        "uid": "attr000002",
+        "order": 1
+      },
+      {
+        "string": "Description:: This has a key:: inside it",
+        "uid": "attr000003",
+        "order": 2
+      },
+      {
+        "string": "Last updated:: [[April 8th, 2026]]",
+        "uid": "attr000004",
+        "order": 3,
+        "refs": [{ "uid": "04-08-2026" }],
+        ":block/refs": [{ ":block/uid": "04-08-2026" }]
+      },
+      {
+        "string": "{{attr-table: [[Project Alpha]]}}",
+        "uid": "attr000005",
+        "order": 4,
+        "refs": [{ "uid": "KjR9_d8HM" }],
+        ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
+      }
+    ]
+  },
+  {
+    "title": "Kanban Board",
+    "uid": "KanbanPgUd",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "Project tasks",
+        "uid": "kanb000001",
+        "order": 0,
+        "children": [
+          {
+            "string": "To Do",
+            "uid": "kanb000002",
+            "order": 0,
+            "children": [
+              {
+                "string": "Task A",
+                "uid": "kanb000003",
+                "order": 0
+              },
+              {
+                "string": "Task B",
+                "uid": "kanb000004",
+                "order": 1
+              }
+            ]
+          },
+          {
+            "string": "In Progress",
+            "uid": "kanb000005",
+            "order": 1,
+            "children": [
+              {
+                "string": "Task C",
+                "uid": "kanb000006",
+                "order": 0
+              }
+            ]
+          },
+          {
+            "string": "Done",
+            "uid": "kanb000007",
+            "order": 2,
+            "children": [
+              {
+                "string": "Task D",
+                "uid": "kanb000008",
+                "order": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Query Examples",
+    "uid": "QueryPgUid",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "{{[[query]]: {and: [[Project Alpha]] [[TODO]]}}}",
+        "uid": "qry0000001",
+        "order": 0,
+        "refs": [{ "uid": "KjR9_d8HM" }],
+        ":block/refs": [{ ":block/uid": "KjR9_d8HM" }]
+      },
+      {
+        "string": "{{[[query]]: {and: [[Meeting Notes]] {not: [[DONE]]}}}}",
+        "uid": "qry0000002",
+        "order": 1,
+        "refs": [{ "uid": "mtn001uid" }],
+        ":block/refs": [{ ":block/uid": "mtn001uid" }]
+      }
+    ]
+  },
+  {
+    "title": "Widget Test",
+    "uid": "WidgetPgUd",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "{{calc: 2 + 2}}",
+        "uid": "widg000001",
+        "order": 0
+      },
+      {
+        "string": "{{slider}}",
+        "uid": "widg000002",
+        "order": 1
+      },
+      {
+        "string": "{{POMO}}",
+        "uid": "widg000003",
+        "order": 2
+      },
+      {
+        "string": "{{word-count}}",
+        "uid": "widg000004",
+        "order": 3
+      },
+      {
+        "string": "{{or: Option A | Option B | Option C}}",
+        "uid": "widg000005",
+        "order": 4
+      }
+    ]
+  },
+  {
+    "title": "research",
+    "uid": "ResearchPg",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "Research page (referenced as #research hashtag)",
+        "uid": "res0000001",
+        "order": 0
+      }
+    ]
+  },
+  {
+    "title": "Active",
+    "uid": "ActivePage",
+    "create-time": 1614229626805,
+    "edit-time": 1614229626805,
+    "children": [
+      {
+        "string": "Active status page",
+        "uid": "act0000001",
+        "order": 0
+      }
+    ]
+  }
+]
