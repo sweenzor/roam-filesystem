@@ -91,16 +91,24 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 
 <block uid="abc123">First block with <page-ref title="Project Beta"/> link and a <page-ref title="research" syntax="hashtag"/></block>
 
-<block uid="def456">Second block with **formatting** and `code`
-  <block uid="ghi789">Nested child block with <attr name="status">active</attr></block>
+<block uid="def456" heading="2">Second block with **formatting** and `code`
+  <block uid="ghi789">Nested child block with <attr name="status"><page-ref title="Active"/></attr></block>
   <block uid="jkl012">References <block-ref uid="mno345"/> from another page</block>
+  <block uid="jkl013">See <page-ref title="Project Beta">the beta project</page-ref> for details</block>
 </block>
 
 <block uid="pqr678"><todo/> Review the design doc
-  <block uid="stu901"><embed uid="xyz555"/></block>
+  <embed uid="xyz555">
+    <block uid="xyz555">Design principles:
+      <block uid="xyz556">Keep it simple</block>
+      <block uid="xyz557">Optimize for readability</block>
+    </block>
+  </embed>
 </block>
 
 <block uid="vwx234"><done/> Ship the prototype</block>
+
+<block uid="med001"><video src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"/></block>
 
 <block uid="lmn567"><query>[:find ?title :where [?p :node/title ?title] [?p :block/refs ?r] [?r :node/title "Project Alpha"]]</query></block>
 
@@ -108,6 +116,11 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
   <block uid="rst111">Row 1 data</block>
   <block uid="uvw222">Row 2 data</block>
 </block>
+
+<backlinks count="2">
+  <backlink page="Meeting Notes" page-uid="mtn001" uid="blk789">Discussed <page-ref title="Project Alpha"/> timeline</backlink>
+  <backlink page="Daily Notes/2026-04-08" page-uid="dn0408" uid="blk456"><todo/> Follow up on <page-ref title="Project Alpha"/> deliverables</backlink>
+</backlinks>
 
 </page>
 ```
@@ -117,18 +130,103 @@ Files use `.roam` extension. The format is XML-structured with markdown inline c
 | Roam construct | XML representation | Attributes |
 |---|---|---|
 | Page | `<page>...</page>` | `uid`, `title` |
-| Block | `<block>...</block>` | `uid`, optional `view` (`table`, `kanban`) |
+| Block | `<block>...</block>` | `uid`, optional `view`, `heading`, `text-align`, `image-width` |
 | Page reference `[[Page]]` | `<page-ref title="Page"/>` | `title` |
+| Aliased page ref `[text]([[Page]])` | `<page-ref title="Page">text</page-ref>` | `title` |
 | Hashtag `#tag` | `<page-ref title="tag" syntax="hashtag"/>` | `title`, `syntax` |
 | Hashtag `#[[multi word]]` | `<page-ref title="multi word" syntax="hashtag"/>` | `title`, `syntax` |
 | Block reference `((uid))` | `<block-ref uid="uid"/>` | `uid` |
-| Block embed `{{[[embed]]: ((uid))}}` | `<embed uid="uid"/>` | `uid` |
+| Aliased block ref `[text](((uid)))` | `<block-ref uid="uid">text</block-ref>` | `uid` |
+| Block embed `{{[[embed]]: ((uid))}}` | `<embed uid="uid">...</embed>` | `uid` |
+| Page embed `{{[[embed]]: [[Page]]}}` | `<embed page="Page">...</embed>` | `page` |
 | TODO `{{[[TODO]]}}` | `<todo/>` | — |
 | DONE `{{[[DONE]]}}` | `<done/>` | — |
 | Attribute `key:: value` | `<attr name="key">value</attr>` | `name` |
 | Query `{{[[query]]: ...}}` | `<query>[:find ...]</query>` | — |
+| Video `{{[[video]]: URL}}` | `<video src="URL"/>` | `src` |
+| PDF `{{pdf: URL}}` | `<pdf src="URL"/>` | `src` |
+| iframe `{{iframe: URL}}` | `<iframe src="URL"/>` | `src` |
+| Render component `{{roam/render: ((uid))}}` | `<roam-render uid="uid"/>` | `uid` |
+| CSS block `{{roam/css}}` | `<roam-css/>` | — |
+| Attribute table `{{attr-table: [[Page]]}}` | `<attr-table page="Page"/>` | `page` |
+| Backlinks section | `<backlinks>...</backlinks>` | `count` |
+| Backlink entry | `<backlink>text</backlink>` | `page`, `page-uid`, `uid` |
 
 Hashtags and wikilinks both normalize to `<page-ref>`. The `syntax` attribute (present only for hashtags) preserves the original form for round-tripping back to Roam. When `syntax` is absent, the reference was a `[[wikilink]]`. This means `grep '<page-ref title="foo"'` finds all references to page "foo" regardless of original syntax.
+
+`<page-ref>` and `<block-ref>` are dual-form tags: self-closing when unaliased (`<page-ref title="X"/>`), container when aliased (`<page-ref title="X">display text</page-ref>`). The parser distinguishes aliased references from regular markdown links by checking if the URL portion matches `[[...]]` or `((...))` patterns.
+
+### Block attributes
+
+Blocks support the following optional XML attributes beyond `uid`:
+
+| Attribute | Values | Source | Notes |
+|---|---|---|---|
+| `view` | `table`, `kanban`, `document`, `numbered` | `:children/view-type` | Child block display mode. `document` and `numbered` may only appear via API, not JSON export. |
+| `heading` | `1`, `2`, `3` | `heading` field | Omit when 0 (no heading). |
+| `text-align` | `center`, `right`, `justify` | `text-align` field | Omit when "left" (default). Rare in practice. |
+| `image-width` | pixel number | `props.image-size.*.width` | Only on blocks containing images. |
+
+Example:
+
+```xml
+<block uid="abc123" heading="2" text-align="center">A centered heading</block>
+<block uid="def456" image-width="580">![screenshot](https://example.com/img.png)</block>
+```
+
+### Inline embed content
+
+Embeds include the full content of the referenced block or page tree inline for readability. This duplicates data but makes each file self-contained — an agent reading a page sees all embedded content without opening other files.
+
+```xml
+<!-- Block embed with inlined content -->
+<embed uid="xyz555">
+  <block uid="xyz555">Design principles:
+    <block uid="child1">Keep it simple</block>
+    <block uid="child2">Optimize for readability</block>
+  </block>
+</embed>
+
+<!-- Page embed with inlined content -->
+<embed page="Project Beta">
+  <block uid="beta1">Beta overview
+    <block uid="beta2">Detail</block>
+  </block>
+</embed>
+
+<!-- Unresolvable embed (deleted block) falls back to bare tag -->
+<embed uid="deleted999"/>
+```
+
+Rules:
+- The sync daemon resolves embed UIDs/page-titles at serialization time and includes the block tree
+- Content inside `<embed>` is **read-only** — the parser ignores it on write-back. Only the `uid` or `page` attribute matters for Roam.
+- If the referenced block/page doesn't exist, fall back to self-closing `<embed uid="X"/>`
+- Nested embeds (embed of an embed) are resolved to max depth 3, then fall back to bare `<embed>` to prevent infinite recursion
+- Embed content is refreshed on each sync cycle, so it stays current with source changes
+
+### Backlinks
+
+Each page file includes a `<backlinks>` section listing every block in the graph that references this page. This eliminates the need to `grep` all files to find incoming references.
+
+```xml
+<backlinks count="2">
+  <backlink page="Meeting Notes" page-uid="mtn001" uid="blk789">Discussed <page-ref title="Project Alpha"/> timeline</backlink>
+  <backlink page="Daily Notes/2026-04-08" page-uid="dn0408" uid="blk456"><todo/> Follow up on <page-ref title="Project Alpha"/> deliverables</backlink>
+</backlinks>
+```
+
+Rules:
+- `<backlinks>` appears after the last `<block>`, before `</page>`
+- Each `<backlink>` has: `page` (source page title), `page-uid` (source page UID), `uid` (source block UID)
+- Content is the full block text with inline XML tags preserved
+- Sorted by page title, then block order within page
+- **Read-only** — the parser ignores the entire `<backlinks>` section on write-back
+- Rebuilt on each sync cycle from a reverse reference index
+- Includes references via `[[Page]]`, `#Page`, `#[[Page]]`, and alias `[text]([[Page]])`
+- Block-ref backlinks are NOT included (those are block-to-block, not page-level)
+- Self-references (page referencing itself) are included
+- `count` attribute on `<backlinks>` enables quick agent inspection of reference volume
 
 ### What stays as markdown
 
@@ -143,6 +241,10 @@ All inline formatting remains as-is within block text content:
 - LaTeX: `$$formula$$`
 - Images: `![alt](url)`
 - External links: `[text](url)`
+- Blockquotes: `> text`
+- Horizontal rules: `---`
+
+Additionally, Roam `{{...}}` patterns that are interactive widgets (calc, slider, POMO, word-count, etc.) are preserved as literal text. They round-trip without loss since the parser treats unknown `{{...}}` as literal text.
 
 Rationale: these are all inline decorations that every LLM and text tool handles fine. XML-ifying them would add noise without improving parseability.
 
@@ -195,7 +297,7 @@ The `uid` attribute on `<page>` is omitted. The sync daemon creates the page in 
 
 The problem: markdown content routinely contains `<`, `>`, and `&` (code examples, comparisons, HTML). Requiring agents to escape these as `&lt;`, `&gt;`, `&amp;` defeats the purpose of making files easy to read and write.
 
-The solution: the parser knows the **finite tag vocabulary** — `page`, `block`, `page-ref`, `block-ref`, `embed`, `todo`, `done`, `attr`, `query` — and treats any `<` that doesn't match a known tag as literal text. This is analogous to how HTML parsers work: lenient by default, strict only at the boundaries that matter.
+The solution: the parser knows the **finite tag vocabulary** — `page`, `block`, `page-ref`, `block-ref`, `embed`, `todo`, `done`, `attr`, `query`, `video`, `pdf`, `iframe`, `roam-render`, `roam-css`, `attr-table`, `backlinks`, `backlink` — and treats any `<` that doesn't match a known tag as literal text. This is analogous to how HTML parsers work: lenient by default, strict only at the boundaries that matter.
 
 Example of valid content that is NOT valid XML:
 
@@ -223,6 +325,8 @@ When an agent creates or edits a `.roam` file:
 - Do not invent new tags — the parser will treat them as literal text
 - Preserve existing `uid` attributes — they are identity anchors
 - Omit `uid` on new blocks/pages — the daemon assigns them
+- Do not edit content inside `<embed>` tags — it is read-only (edits are ignored; modify the source page instead)
+- Do not edit the `<backlinks>` section — it is read-only and rebuilt each sync cycle
 
 ---
 
@@ -575,6 +679,16 @@ find pages/ -name "*.roam" -mmin -30
 
 # Full-text search across all pages
 grep -r "specific phrase" pages/
+
+# See what links TO a page (no grep needed — just read the page)
+# The <backlinks> section at the bottom lists all incoming references
+cat pages/Project/Alpha.roam
+
+# Find pages with most incoming references
+grep -c '<backlink' pages/*.roam | sort -t: -k2 -rn | head -20
+
+# Find all TODO blocks that reference a specific page
+grep '<backlink.*<todo/>' pages/Project/Alpha.roam
 ```
 
 ---
@@ -583,7 +697,7 @@ grep -r "specific phrase" pages/
 
 1. **Hashtags**: `#tag` → `<page-ref title="tag" syntax="hashtag"/>`. Normalizes all page references to one tag. The `syntax` attribute preserves original form for round-tripping.
 
-2. **Attributes**: `key:: value` → `<attr name="key">value</attr>`. Enables structured queries via grep.
+2. **Attributes**: `key:: value` → `<attr name="key">value</attr>`. Enables structured queries via grep. Attribute values can contain inline tags (e.g., `<page-ref>`). Only the first `::` is treated as the separator.
 
 3. **Queries**: `{{[[query]]: ...}}` → `<query>...</query>`. Datalog content is opaque but bounded by tags.
 
@@ -591,6 +705,52 @@ grep -r "specific phrase" pages/
 
 5. **Kanban**: Parent block gets `view="kanban"` attribute. Child blocks are columns, grandchildren are cards.
 
-6. **Version history**: Out of scope for v1. Roam's block-level history is not exposed via API anyway.
+6. **Aliases**: `[text]([[Page]])` → `<page-ref title="Page">text</page-ref>`. Distinguished from regular markdown links by checking if URL matches `[[...]]` or `((...))`.
 
-7. **Permissions**: Out of scope for v1. Single-user graphs only.
+7. **Media embeds**: `{{[[video]]: URL}}`, `{{pdf: URL}}`, `{{iframe: URL}}` → dedicated self-closing tags. All video variants (`{{video:`, `{{youtube:`, `{{[[video]]:`) normalize to `<video>`.
+
+8. **Inline embed content**: `<embed>` tags include the full block tree of the referenced content. Read-only on write-back. Max recursion depth 3 for nested embeds. Unresolvable embeds fall back to self-closing.
+
+9. **Backlinks**: Each page includes a `<backlinks>` section with full block text of every referring block. Read-only, rebuilt each sync cycle. Sorted by page title.
+
+10. **Block metadata**: `heading` and `text-align` become block attributes. Timestamps, user info, and refs arrays are excluded (derivable or sync-internal).
+
+11. **Widget commands**: `{{calc:}}`, `{{slider}}`, `{{POMO}}`, `{{word-count}}`, etc. are preserved as literal text. No XML tags needed — they round-trip safely.
+
+12. **Version history**: Out of scope for v1. Roam's block-level history is not exposed via API anyway.
+
+13. **Permissions**: Out of scope for v1. Single-user graphs only.
+
+---
+
+## Verification
+
+The sync daemon includes verification checks to confirm proper JSON→XML translation:
+
+### Structural checks (run after initial sync)
+
+- **Page count**: JSON top-level objects == `.roam` file count
+- **Block count**: Recursive JSON block count == `<block>` tags across all files
+- **UID preservation**: All UIDs from JSON present in XML (set equality)
+- **Content fidelity**: Per-block JSON `string` matches XML block content (after reversing tag substitutions)
+
+### Round-trip verification
+
+1. Convert JSON → XML files
+2. Parse XML → reconstruct JSON-equivalent structure
+3. Normalize both (strip excluded metadata, sort by UID)
+4. Deep-compare — report per-page pass/fail with diff details
+
+### Reference integrity (run periodically)
+
+- **Dangling block-refs**: `<block-ref uid="X">` without matching `<block uid="X">` → warning
+- **Dangling page-refs**: `<page-ref title="X">` without matching file → warning
+- **Embed resolution**: Self-closing `<embed>` with no content → check if intentional
+- **Backlink completeness**: Every `<page-ref>` in the graph has a matching `<backlink>` in the target page → error if missing
+- **Backlink accuracy**: Every `<backlink>` corresponds to a real `<page-ref>` in the source block → error if stale
+
+### Test data
+
+- **Primary**: Roam Help database JSON export (`MatthieuBizien/RoamResearch-offical-help`)
+- **Secondary**: Synthetic test fixture (`test/fixtures/comprehensive.json`) exercising all features
+- **Tertiary**: Converter project test cases (`roam-garden/roam-export`, `LuisThiamNye/roam-parser`)
